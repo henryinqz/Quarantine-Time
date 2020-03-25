@@ -1,0 +1,2 @@
+rootProject.name='Quarantine Time'
+include ':app'
