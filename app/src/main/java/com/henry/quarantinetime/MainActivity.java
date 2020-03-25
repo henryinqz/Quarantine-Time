@@ -5,6 +5,10 @@ import androidx.fragment.app.DialogFragment;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -34,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public static final String START_TIME = "startTime";
 
     private Calendar calendarStart;
+
+    private BroadcastReceiver minuteUpdateReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,5 +147,30 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         textViewElapsedTime.setText(strDays);
         textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+    }
+
+    public void startMinuteUpdater() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_TIME_TICK);
+        minuteUpdateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updateViews();
+            }
+        };
+
+        registerReceiver(minuteUpdateReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startMinuteUpdater();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(minuteUpdateReceiver);
     }
 }
