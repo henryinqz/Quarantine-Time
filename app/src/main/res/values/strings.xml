@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Quarantine Time</string>
+    <string name="elapsed_time">Set a start date to track how long you\'ve been quarantined for!</string>
+    <string name="days_since">Stuck in a quarantine?</string>
 </resources>
