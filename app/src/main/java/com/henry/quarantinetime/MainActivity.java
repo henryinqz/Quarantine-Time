@@ -11,10 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.RelativeSizeSpan;
@@ -23,18 +21,11 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
-import java.text.DateFormat;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
@@ -51,7 +42,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public static final String START_HOUR = "startDateHour";
     public static final String START_MIN = "startDateMin";
 
-
     private LocalDateTime startDateTime;
     private LocalDateTime currDateTime;
     //private Calendar calendarStart;
@@ -66,8 +56,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         Button butPickDate = (Button) findViewById(R.id.button_pickdate);
         butPickDate.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { // EDIT TO OPEN TO EXISTING START DATE IF IT EXISTS
-                DialogFragment datePicker = new DatePickerFragment();
+            public void onClick(View v) {
+                DialogFragment datePicker;
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null"))) {
+                    datePicker = new DatePickerFragment();
+                } else { // Opens DatePickerFragment to existing start date
+                    datePicker = new DatePickerFragment(startDateTime.getYear(), startDateTime.getMonthValue()-1, startDateTime.getDayOfMonth());
+                }
                 datePicker.show(getSupportFragmentManager(), "date picker");
             }
         });
@@ -79,24 +74,27 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         startDateTime = LocalDateTime.of(year, month+1, dayOfMonth, 0, 0, 0); // I believe LocalDateTime monthvalue needs month+1
+        startDate = startDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("MM/dd/YYYY"));
 
-        /*calendarStart = Calendar.getInstance();
+        /*
+        calendarStart = Calendar.getInstance();
         calendarStart.set(Calendar.YEAR, year);
         calendarStart.set(Calendar.MONTH, month);
         calendarStart.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         calendarStart.set(Calendar.HOUR_OF_DAY, 0);
         calendarStart.set(Calendar.MINUTE,0);
         calendarStart.set(Calendar.SECOND,0);
-        calendarStart.set(Calendar.MILLISECOND,0);*/
+        calendarStart.set(Calendar.MILLISECOND,0);
+        */
 
+        // Open TimePickerFragment
         DialogFragment timePicker = new TimePickerFragment();
         timePicker.show(getSupportFragmentManager(), "time picker");
 
-        /*startDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();*/
-
-        //startDate = DateFormat.getDateInstance(DateFormat.SHORT).format(startDateTime.toLocalDate());
-        startDate = startDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("MM/dd/YYYY"));
+        /*
+        startDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendarStart.getTime());
+        startDateMilliseconds = calendarStart.getTimeInMillis();
+        */
 
         saveStartDate();
         updateViews();
@@ -106,14 +104,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         startDateTime = startDateTime.withHour(hourOfDay);
         startDateTime = startDateTime.withMinute(minute);
+        startTime = startDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
 
-        /*calendarStart.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        /*
+        calendarStart.set(Calendar.HOUR_OF_DAY, hourOfDay);
         calendarStart.set(Calendar.MINUTE, minute);
         startTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();*/
-
-        //startTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(startDateTime.toLocalTime());
-        startTime = startDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
+        startDateMilliseconds = calendarStart.getTimeInMillis();
+        */
 
         saveStartDate();
         updateViews();
@@ -131,8 +129,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         editor.putInt(START_HOUR, startDateTime.getHour());
         editor.putInt(START_MIN, startDateTime.getMinute());
         editor.apply();
-
-        //Toast.makeText(this, "Date saved", Toast.LENGTH_SHORT);
     }
 
     public void loadStartDate() {
@@ -160,7 +156,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         long mins = TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start)) - TimeUnit.HOURS.toMinutes(hours) - TimeUnit.DAYS.toMinutes(days);
         */
 
-        if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {// Exit method if date/time is not set
+        // Exit method if date/time is not set
+        if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {
             return;
         }
 
@@ -177,7 +174,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         Duration elapsedDuration = Duration.between(startDateTime.toLocalTime(), currDateTime.toLocalTime());
         long hours = elapsedDuration.toHours();
         long mins = elapsedDuration.toMinutes() - (hours*60);
-
 
         // Days since (top text)
         TextView textViewDaysSince = (TextView) findViewById(R.id.text_view_start_time);
@@ -225,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
     }
 
-    public void startMinuteUpdater() {
+    public void startMinuteUpdater() { // Update timer every minute
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_TIME_TICK);
         minuteUpdateReceiver = new BroadcastReceiver() {
