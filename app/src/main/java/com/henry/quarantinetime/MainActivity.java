@@ -73,9 +73,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         });
 
         loadStartDate();
-        if (startDateTime != null) { // Date is set
-            updateViews();
-        }
+        updateViews();
     }
 
     @Override
@@ -148,8 +146,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         int hour = sharedPref.getInt(START_HOUR, 0);
         int min = sharedPref.getInt(START_MIN, 0);
 
-        startDateTime = LocalDateTime.of(year, month, day, hour , min, 0);
-
+        startDateTime = LocalDateTime.of(year, month, day, hour, min, 0);
     }
 
     public void updateViews() {
@@ -162,6 +159,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         long hours = TimeUnit.MILLISECONDS.toHours(Math.abs(end - start)) - TimeUnit.DAYS.toHours(days);
         long mins = TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start)) - TimeUnit.HOURS.toMinutes(hours) - TimeUnit.DAYS.toMinutes(days);
         */
+
+        if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {// Exit method if date/time is not set
+            return;
+        }
 
         // Update current date
         currDateTime = LocalDateTime.now();
