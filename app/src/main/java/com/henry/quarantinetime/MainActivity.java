@@ -40,7 +40,6 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
     private String startDate;
     private String startTime;
-    private long startDateMilliseconds;
 
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String START_DATE = "startDate";
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     private LocalDateTime startDateTime;
     private LocalDateTime currDateTime;
-    private Calendar calendarStart;
+    //private Calendar calendarStart;
 
     private BroadcastReceiver minuteUpdateReceiver;
 
@@ -74,8 +73,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         });
 
         loadStartDate();
-        //if (startDateMilliseconds != -1) { // Date is set
-        if (startDateTime != null) {
+        if (startDateTime != null) { // Date is set
             updateViews();
         }
     }
@@ -129,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(START_DATE, startDate);
         editor.putString(START_TIME, startTime);
-       // editor.putLong(START_DATE_MILLISECONDS, startDateMilliseconds);
         editor.putInt(START_YEAR, startDateTime.getYear());
         editor.putInt(START_MONTH, startDateTime.getMonthValue());
         editor.putInt(START_DAY, startDateTime.getDayOfMonth());
@@ -144,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         startDate = sharedPref.getString(START_DATE, "date_null");
         startTime = sharedPref.getString(START_TIME, "time_null");
-        //startDateMilliseconds = sharedPref.getLong(START_DATE_MILLISECONDS, -1);
 
         int year = sharedPref.getInt(START_YEAR, 0);
         int month = sharedPref.getInt(START_MONTH, 1);
@@ -166,21 +162,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         long hours = TimeUnit.MILLISECONDS.toHours(Math.abs(end - start)) - TimeUnit.DAYS.toHours(days);
         long mins = TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start)) - TimeUnit.HOURS.toMinutes(hours) - TimeUnit.DAYS.toMinutes(days);
         */
-
-        /*long years = 0;
-        long months = 0;
-        long days = 0;
-        long hours = 0;
-        long mins = 0;
-
-        if (calendarStart != null) {
-            years = Calendar.getInstance().get(Calendar.YEAR) - calendarStart.get(Calendar.YEAR);
-            months = Calendar.getInstance().get(Calendar.MONTH) - calendarStart.get(Calendar.MONTH);
-            days = Calendar.getInstance().get(Calendar.DAY_OF_YEAR) - calendarStart.get(Calendar.DAY_OF_YEAR);
-
-            hours = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - calendarStart.get(Calendar.HOUR_OF_DAY);
-            mins = Calendar.getInstance().get(Calendar.MINUTE) - calendarStart.get(Calendar.MINUTE);
-        }*/
 
         // Update current date
         currDateTime = LocalDateTime.now();
@@ -229,12 +210,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 textViewElapsedTime.setText(years_text);
                 textViewElapsedTime.append("\n" + months_text + ", " + days + " days,");
                 textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
-
-                /*textViewElapsedTime.setText(years + " year");
-                if (years != 1) textViewElapsedTime.append("s"); // Plural if year count is not 1
-
-                textViewElapsedTime.append(",\n ");
-                textViewElapsedTime.append(months_text);*/
             } else {
                 textViewElapsedTime.setText(months_text);
                 textViewElapsedTime.append("\n" + days + " days, " + hours + " hours, " + mins + " minutes");
