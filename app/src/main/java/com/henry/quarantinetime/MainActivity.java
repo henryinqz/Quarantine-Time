@@ -1,5 +1,6 @@
 package com.henry.quarantinetime;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
@@ -24,9 +26,17 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.text.DateFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
     private String startDate;
     private String startTime;
@@ -34,9 +44,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String START_DATE = "startDate";
-    public static final String START_DATE_MILLISECONDS = "startDateMilliseconds";
     public static final String START_TIME = "startTime";
+    //public static final String START_DATE_MILLISECONDS = "startDateMilliseconds";
+    public static final String START_YEAR = "startDateYear";
+    public static final String START_MONTH = "startDateMonth";
+    public static final String START_DAY = "startDateDay";
+    public static final String START_HOUR = "startDateHour";
+    public static final String START_MIN = "startDateMin";
 
+
+    private LocalDateTime startDateTime;
+    private LocalDateTime currDateTime;
     private Calendar calendarStart;
 
     private BroadcastReceiver minuteUpdateReceiver;
@@ -56,33 +74,33 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         });
 
         loadStartDate();
-        if (startDateMilliseconds != -1) { // Date is set
+        //if (startDateMilliseconds != -1) { // Date is set
+        if (startDateTime != null) {
             updateViews();
         }
-
-        //calendarCurrent = Calendar.getInstance();
-        /*String currentDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendar.getTime());
-
-        TextView textViewDate = findViewById(R.id.text_view_date);
-        textViewDate.setText(currentDate);*/
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-        calendarStart = Calendar.getInstance();
+        startDateTime = LocalDateTime.of(year, month+1, dayOfMonth, 0, 0, 0); // I believe LocalDateTime monthvalue needs month+1
+
+        /*calendarStart = Calendar.getInstance();
         calendarStart.set(Calendar.YEAR, year);
         calendarStart.set(Calendar.MONTH, month);
         calendarStart.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         calendarStart.set(Calendar.HOUR_OF_DAY, 0);
         calendarStart.set(Calendar.MINUTE,0);
         calendarStart.set(Calendar.SECOND,0);
-        calendarStart.set(Calendar.MILLISECOND,0);
+        calendarStart.set(Calendar.MILLISECOND,0);*/
 
         DialogFragment timePicker = new TimePickerFragment();
         timePicker.show(getSupportFragmentManager(), "time picker");
 
-        startDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();
+        /*startDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendarStart.getTime());
+        startDateMilliseconds = calendarStart.getTimeInMillis();*/
+
+        //startDate = DateFormat.getDateInstance(DateFormat.SHORT).format(startDateTime.toLocalDate());
+        startDate = startDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("MM/dd/YYYY"));
 
         saveStartDate();
         updateViews();
@@ -90,10 +108,16 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        calendarStart.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        startDateTime = startDateTime.withHour(hourOfDay);
+        startDateTime = startDateTime.withMinute(minute);
+
+        /*calendarStart.set(Calendar.HOUR_OF_DAY, hourOfDay);
         calendarStart.set(Calendar.MINUTE, minute);
         startTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();
+        startDateMilliseconds = calendarStart.getTimeInMillis();*/
+
+        //startTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(startDateTime.toLocalTime());
+        startTime = startDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
 
         saveStartDate();
         updateViews();
@@ -105,7 +129,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(START_DATE, startDate);
         editor.putString(START_TIME, startTime);
-        editor.putLong(START_DATE_MILLISECONDS, startDateMilliseconds);
+       // editor.putLong(START_DATE_MILLISECONDS, startDateMilliseconds);
+        editor.putInt(START_YEAR, startDateTime.getYear());
+        editor.putInt(START_MONTH, startDateTime.getMonthValue());
+        editor.putInt(START_DAY, startDateTime.getDayOfMonth());
+        editor.putInt(START_HOUR, startDateTime.getHour());
+        editor.putInt(START_MIN, startDateTime.getMinute());
         editor.apply();
 
         //Toast.makeText(this, "Date saved", Toast.LENGTH_SHORT);
@@ -115,10 +144,20 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         startDate = sharedPref.getString(START_DATE, "date_null");
         startTime = sharedPref.getString(START_TIME, "time_null");
-        startDateMilliseconds = sharedPref.getLong(START_DATE_MILLISECONDS, -1);
+        //startDateMilliseconds = sharedPref.getLong(START_DATE_MILLISECONDS, -1);
+
+        int year = sharedPref.getInt(START_YEAR, 0);
+        int month = sharedPref.getInt(START_MONTH, 1);
+        int day = sharedPref.getInt(START_DAY, 1);
+        int hour = sharedPref.getInt(START_HOUR, 0);
+        int min = sharedPref.getInt(START_MIN, 0);
+
+        startDateTime = LocalDateTime.of(year, month, day, hour , min, 0);
+
     }
 
     public void updateViews() {
+        /*
         long end = Calendar.getInstance().getTimeInMillis();
         //long start = calendarStart.getTimeInMillis();
         long start = startDateMilliseconds;
@@ -126,7 +165,39 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         long days = TimeUnit.MILLISECONDS.toDays(Math.abs(end - start));
         long hours = TimeUnit.MILLISECONDS.toHours(Math.abs(end - start)) - TimeUnit.DAYS.toHours(days);
         long mins = TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start)) - TimeUnit.HOURS.toMinutes(hours) - TimeUnit.DAYS.toMinutes(days);
+        */
 
+        /*long years = 0;
+        long months = 0;
+        long days = 0;
+        long hours = 0;
+        long mins = 0;
+
+        if (calendarStart != null) {
+            years = Calendar.getInstance().get(Calendar.YEAR) - calendarStart.get(Calendar.YEAR);
+            months = Calendar.getInstance().get(Calendar.MONTH) - calendarStart.get(Calendar.MONTH);
+            days = Calendar.getInstance().get(Calendar.DAY_OF_YEAR) - calendarStart.get(Calendar.DAY_OF_YEAR);
+
+            hours = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - calendarStart.get(Calendar.HOUR_OF_DAY);
+            mins = Calendar.getInstance().get(Calendar.MINUTE) - calendarStart.get(Calendar.MINUTE);
+        }*/
+
+        // Update current date
+        currDateTime = LocalDateTime.now();
+        currDateTime = currDateTime.withSecond(0);
+        currDateTime = currDateTime.withNano(0);
+
+        Period elapsedPeriod = Period.between(startDateTime.toLocalDate(), currDateTime.toLocalDate());
+        int years = elapsedPeriod.getYears();
+        int months = elapsedPeriod.getMonths();
+        int days = elapsedPeriod.getDays();
+
+        Duration elapsedDuration = Duration.between(startDateTime.toLocalTime(), currDateTime.toLocalTime());
+        long hours = elapsedDuration.toHours();
+        long mins = elapsedDuration.toMinutes() - (hours*60);
+
+
+        // Days since (top text)
         TextView textViewDaysSince = (TextView) findViewById(R.id.text_view_start_time);
         SpannableStringBuilder strDate = new SpannableStringBuilder(startDate);
         strDate.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, strDate.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -139,14 +210,43 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         textViewDaysSince.append(strTime);
         textViewDaysSince.append(":");
 
+        // Time elapsed (middle text)
         TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
-        SpannableStringBuilder strDays = new SpannableStringBuilder(days + " days");
-        strDays.setSpan(new RelativeSizeSpan(2f), 0, strDays.length(), 0);
-        strDays.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, strDays.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (months > 0 || years > 0) { // Show months/years (bold)
+            SpannableStringBuilder months_text = new SpannableStringBuilder(months + " month");
+            if (months != 1) months_text.append("s"); // Plural if month count is not 1
 
+            months_text.setSpan(new RelativeSizeSpan(2f), 0, months_text.length(), 0);
+            months_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, months_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        textViewElapsedTime.setText(strDays);
-        textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+            if (years > 0) { // Show years
+                SpannableStringBuilder years_text = new SpannableStringBuilder(years + " year");
+                if (years != 1) years_text.append("s"); // Plural if month count is not 1
+
+                years_text.setSpan(new RelativeSizeSpan(2f), 0, years_text.length(), 0);
+                years_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, years_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                textViewElapsedTime.setText(years_text);
+                textViewElapsedTime.append("\n" + months_text + ", " + days + " days,");
+                textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+
+                /*textViewElapsedTime.setText(years + " year");
+                if (years != 1) textViewElapsedTime.append("s"); // Plural if year count is not 1
+
+                textViewElapsedTime.append(",\n ");
+                textViewElapsedTime.append(months_text);*/
+            } else {
+                textViewElapsedTime.setText(months_text);
+                textViewElapsedTime.append("\n" + days + " days, " + hours + " hours, " + mins + " minutes");
+            }
+        } else if (months == 0){ // Show days (bold)
+            SpannableStringBuilder days_text = new SpannableStringBuilder(days + " days");
+            days_text.setSpan(new RelativeSizeSpan(2f), 0, days_text.length(), 0);
+            days_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, days_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            textViewElapsedTime.setText(days_text);
+            textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+        }
     }
 
     public void startMinuteUpdater() {
