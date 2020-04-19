@@ -1,5 +1,6 @@
 package com.henry.quarantinetime;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
@@ -16,6 +17,9 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.RelativeSizeSpan;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -52,6 +56,59 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private BroadcastReceiver minuteUpdateReceiver;
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.reset: // Reset start date
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  { // No start date
+                    Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
+                } else {
+                    final TextView textViewStartTime = (TextView) findViewById(R.id.text_view_start_time);
+                    final TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
+                    textViewStartTime.setText(R.string.days_since); // to reset strings
+                    textViewElapsedTime.setText(R.string.elapsed_time);
+
+                    clearStartDate();
+                    loadStartDate();
+                    updateViews();
+                    Toast.makeText(getApplicationContext(), "Start date reset", Toast.LENGTH_LONG).show();
+                }
+                return true;
+            case R.id.date_format:
+                return true;
+            case R.id.date_format_fullday:
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  { // Exit method if date/time is not set
+                    Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
+                } else {
+                    showFullDaysOnly = true;
+                    saveDateFormat();
+                    updateViews();
+                    Toast.makeText(getApplicationContext(), "Switched to full day format", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            case R.id.date_format_years:
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  { // Exit method if date/time is not set
+                    Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
+                } else {
+                    showFullDaysOnly = false;
+                    saveDateFormat();
+                    updateViews();
+                    Toast.makeText(getApplicationContext(), "Switched to year/month format", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -73,22 +130,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE); // Get shared pref of date format
         showFullDaysOnly = sharedPref.getBoolean(SETTINGS_FULLDAYS, false);
 
-        TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
+        final TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
         textViewElapsedTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Exit method if date/time is not set
-                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  { // Exit method if date/time is not set
                     Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
                 } else {
-                    showFullDaysOnly = !showFullDaysOnly;
+                    showFullDaysOnly = !showFullDaysOnly; // Toggle
+                    saveDateFormat();
                     updateViews();
-                    Toast.makeText(getApplicationContext(), "Switched date/time format", Toast.LENGTH_SHORT).show();
-
-                    SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE); // Update shared prefs
-                    SharedPreferences.Editor editor = sharedPref.edit();
-                    editor.putBoolean(SETTINGS_FULLDAYS, showFullDaysOnly);
-                    editor.apply();
+                    Toast.makeText(getApplicationContext(), "Switched date format", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -101,6 +153,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         startDateTime = LocalDateTime.of(year, month+1, dayOfMonth, 0, 0, 0); // I believe LocalDateTime monthvalue needs month+1
         startDate = startDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("MM/dd/YYYY"));
+
+        // If time is not set yet, default to 12:00AM
+        if (startTime.equals("time_null")) {
+            startDateTime = startDateTime.withHour(0);
+            startDateTime = startDateTime.withMinute(0);
+            startTime = startDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
+        }
 
         // Open TimePickerFragment
         DialogFragment timePicker = new TimePickerFragment();
@@ -118,6 +177,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         saveStartDate();
         updateViews();
+    }
+
+    public void saveDateFormat() {
+        SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE); // Update shared prefs
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(SETTINGS_FULLDAYS, showFullDaysOnly);
+        editor.apply();
     }
 
     public void saveStartDate() {

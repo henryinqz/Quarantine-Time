@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/date_format"
+        android:title="@string/date_format_setting">
+        <menu>
+            <item android:id="@+id/date_format_fullday"
+                android:title="Show full days" />
+            <item android:id="@+id/date_format_years"
+                android:title="Show years/months" />
+        </menu>
+
+    </item>
+    <item android:id="@+id/reset"
+        android:title="@string/reset_setting" />
+</menu>
