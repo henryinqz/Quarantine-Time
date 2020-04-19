@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private LocalDateTime startDateTime;
     private LocalDateTime currDateTime;
     //private Calendar calendarStart;
+
+    private boolean showFullDaysOnly = true;
 
     private BroadcastReceiver minuteUpdateReceiver;
 
@@ -146,34 +149,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void updateViews() {
-        /*
-        long end = Calendar.getInstance().getTimeInMillis();
-        //long start = calendarStart.getTimeInMillis();
-        long start = startDateMilliseconds;
-
-        long days = TimeUnit.MILLISECONDS.toDays(Math.abs(end - start));
-        long hours = TimeUnit.MILLISECONDS.toHours(Math.abs(end - start)) - TimeUnit.DAYS.toHours(days);
-        long mins = TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start)) - TimeUnit.HOURS.toMinutes(hours) - TimeUnit.DAYS.toMinutes(days);
-        */
-
         // Exit method if date/time is not set
         if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {
             return;
         }
-
-        // Update current date
-        currDateTime = LocalDateTime.now();
-        currDateTime = currDateTime.withSecond(0);
-        currDateTime = currDateTime.withNano(0);
-
-        Period elapsedPeriod = Period.between(startDateTime.toLocalDate(), currDateTime.toLocalDate());
-        int years = elapsedPeriod.getYears();
-        int months = elapsedPeriod.getMonths();
-        int days = elapsedPeriod.getDays();
-
-        Duration elapsedDuration = Duration.between(startDateTime.toLocalTime(), currDateTime.toLocalTime());
-        long hours = elapsedDuration.toHours();
-        long mins = elapsedDuration.toMinutes() - (hours*60);
 
         // Days since (top text)
         TextView textViewDaysSince = (TextView) findViewById(R.id.text_view_start_time);
@@ -188,36 +167,60 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         textViewDaysSince.append(strTime);
         textViewDaysSince.append(":");
 
+        // Update current date
+        currDateTime = LocalDateTime.now();
+        currDateTime = currDateTime.withSecond(0);
+        currDateTime = currDateTime.withNano(0);
+        Duration elapsedDuration = Duration.between(startDateTime.toLocalTime(), currDateTime.toLocalTime());
+        long hours = elapsedDuration.toHours();
+        long mins = elapsedDuration.toMinutes() - (hours*60);
+
         // Time elapsed (middle text)
         TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
-        if (months > 0 || years > 0) { // Show months/years (bold)
-            SpannableStringBuilder months_text = new SpannableStringBuilder(months + " month");
-            if (months != 1) months_text.append("s"); // Plural if month count is not 1
 
-            months_text.setSpan(new RelativeSizeSpan(2f), 0, months_text.length(), 0);
-            months_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, months_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (showFullDaysOnly == true) { // DAYS ONLY
+            long days_full = ChronoUnit.DAYS.between(startDateTime.toLocalDate(), currDateTime.toLocalDate());
 
-            if (years > 0) { // Show years
-                SpannableStringBuilder years_text = new SpannableStringBuilder(years + " year");
-                if (years != 1) years_text.append("s"); // Plural if month count is not 1
-
-                years_text.setSpan(new RelativeSizeSpan(2f), 0, years_text.length(), 0);
-                years_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, years_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                textViewElapsedTime.setText(years_text);
-                textViewElapsedTime.append("\n" + months_text + ", " + days + " days,");
-                textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
-            } else {
-                textViewElapsedTime.setText(months_text);
-                textViewElapsedTime.append("\n" + days + " days, " + hours + " hours, " + mins + " minutes");
-            }
-        } else if (months == 0){ // Show days (bold)
-            SpannableStringBuilder days_text = new SpannableStringBuilder(days + " days");
-            days_text.setSpan(new RelativeSizeSpan(2f), 0, days_text.length(), 0);
-            days_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),0, days_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-            textViewElapsedTime.setText(days_text);
+            SpannableStringBuilder days_full_text = new SpannableStringBuilder(days_full + " days");
+            days_full_text.setSpan(new RelativeSizeSpan(2f), 0, days_full_text.length(), 0);
+            days_full_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, days_full_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            textViewElapsedTime.setText(days_full_text);
             textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+        } else { // YEARS/MONTHS/DAYS
+            Period elapsedPeriod = Period.between(startDateTime.toLocalDate(), currDateTime.toLocalDate());
+            int years = elapsedPeriod.getYears();
+            int months = elapsedPeriod.getMonths();
+            int days = elapsedPeriod.getDays();
+
+            if (months > 0 || years > 0) { // Show months/years (bold)
+                SpannableStringBuilder months_text = new SpannableStringBuilder(months + " month");
+                if (months != 1) months_text.append("s"); // Plural if month count is not 1
+
+                months_text.setSpan(new RelativeSizeSpan(2f), 0, months_text.length(), 0);
+                months_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, months_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                if (years > 0) { // Show years
+                    SpannableStringBuilder years_text = new SpannableStringBuilder(years + " year");
+                    if (years != 1) years_text.append("s"); // Plural if month count is not 1
+
+                    years_text.setSpan(new RelativeSizeSpan(2f), 0, years_text.length(), 0);
+                    years_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, years_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    textViewElapsedTime.setText(years_text);
+                    textViewElapsedTime.append("\n" + months_text + ", " + days + " days,");
+                    textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+                } else {
+                    textViewElapsedTime.setText(months_text);
+                    textViewElapsedTime.append("\n" + days + " days, " + hours + " hours, " + mins + " minutes");
+                }
+            } else if (months == 0) { // Show days (bold)
+                SpannableStringBuilder days_text = new SpannableStringBuilder(days + " days");
+                days_text.setSpan(new RelativeSizeSpan(2f), 0, days_text.length(), 0);
+                days_text.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, days_text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                textViewElapsedTime.setText(days_text);
+                textViewElapsedTime.append("\n" + hours + " hours, " + mins + " minutes");
+            }
         }
     }
 
