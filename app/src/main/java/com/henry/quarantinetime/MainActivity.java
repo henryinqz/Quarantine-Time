@@ -5,10 +5,12 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -69,15 +71,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  { // No start date
                     Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
                 } else {
-                    final TextView textViewStartTime = (TextView) findViewById(R.id.text_view_start_time);
-                    final TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
-                    textViewStartTime.setText(R.string.days_since); // to reset strings
-                    textViewElapsedTime.setText(R.string.elapsed_time);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage("Are you sure you want to reset the start date?")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    TextView textViewStartTime = (TextView) findViewById(R.id.text_view_start_time);
+                                    TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
+                                    textViewStartTime.setText(R.string.days_since); // to reset strings
+                                    textViewElapsedTime.setText(R.string.elapsed_time);
 
-                    clearStartDate();
-                    loadStartDate();
-                    updateViews();
-                    Toast.makeText(getApplicationContext(), "Start date reset", Toast.LENGTH_LONG).show();
+                                    clearStartDate();
+                                    loadStartDate();
+                                    updateViews();
+                                    Toast.makeText(getApplicationContext(), "Start date reset", Toast.LENGTH_LONG).show();
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            })
+                            .show();
                 }
                 return true;
             case R.id.date_format:
