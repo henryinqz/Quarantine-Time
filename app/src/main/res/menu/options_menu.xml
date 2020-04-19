@@ -4,9 +4,9 @@
         android:title="@string/date_format_setting">
         <menu>
             <item android:id="@+id/date_format_fullday"
-                android:title="Show full days" />
+                android:title="@string/date_format_fulldays_setting" />
             <item android:id="@+id/date_format_years"
-                android:title="Show years/months" />
+                android:title="@string/date_format_yearsmonths_setting" />
         </menu>
 
     </item>
