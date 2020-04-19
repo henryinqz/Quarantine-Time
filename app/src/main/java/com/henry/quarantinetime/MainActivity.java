@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private LocalDateTime currDateTime;
     //private Calendar calendarStart;
 
+    public static final String SETTINGS_FULLDAYS = "showFullDays";
     private boolean showFullDaysOnly = true;
 
     private BroadcastReceiver minuteUpdateReceiver;
@@ -67,6 +69,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                     datePicker = new DatePickerFragment(startDateTime.getYear(), startDateTime.getMonthValue()-1, startDateTime.getDayOfMonth());
                 }
                 datePicker.show(getSupportFragmentManager(), "date picker");
+            }
+        });
+
+        SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE); // Get shared pref of date format
+        showFullDaysOnly = sharedPref.getBoolean(SETTINGS_FULLDAYS, false);
+
+        TextView textViewElapsedTime = (TextView) findViewById(R.id.text_view_elapsed_time);
+        textViewElapsedTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Exit method if date/time is not set
+                if (startDateTime == null || (startDate.equals("date_null") && startTime.equals("time_null")))  {
+                    Toast.makeText(getApplicationContext(), "Choose a start date", Toast.LENGTH_LONG).show();
+                } else {
+                    showFullDaysOnly = !showFullDaysOnly;
+                    updateViews();
+                    Toast.makeText(getApplicationContext(), "Switched date/time format", Toast.LENGTH_SHORT).show();
+
+                    SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE); // Update shared prefs
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putBoolean(SETTINGS_FULLDAYS, showFullDaysOnly);
+                    editor.apply();
+                }
             }
         });
 
