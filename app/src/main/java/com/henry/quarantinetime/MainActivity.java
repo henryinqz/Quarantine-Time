@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String START_DATE = "startDate";
     public static final String START_TIME = "startTime";
-    //public static final String START_DATE_MILLISECONDS = "startDateMilliseconds";
     public static final String START_YEAR = "startDateYear";
     public static final String START_MONTH = "startDateMonth";
     public static final String START_DAY = "startDateDay";
@@ -46,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     private LocalDateTime startDateTime;
     private LocalDateTime currDateTime;
-    //private Calendar calendarStart;
 
     public static final String SETTINGS_FULLDAYS = "showFullDays";
     private boolean showFullDaysOnly = true;
@@ -104,25 +102,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         startDateTime = LocalDateTime.of(year, month+1, dayOfMonth, 0, 0, 0); // I believe LocalDateTime monthvalue needs month+1
         startDate = startDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("MM/dd/YYYY"));
 
-        /*
-        calendarStart = Calendar.getInstance();
-        calendarStart.set(Calendar.YEAR, year);
-        calendarStart.set(Calendar.MONTH, month);
-        calendarStart.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-        calendarStart.set(Calendar.HOUR_OF_DAY, 0);
-        calendarStart.set(Calendar.MINUTE,0);
-        calendarStart.set(Calendar.SECOND,0);
-        calendarStart.set(Calendar.MILLISECOND,0);
-        */
-
         // Open TimePickerFragment
         DialogFragment timePicker = new TimePickerFragment();
         timePicker.show(getSupportFragmentManager(), "time picker");
-
-        /*
-        startDate = DateFormat.getDateInstance(DateFormat.LONG).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();
-        */
 
         saveStartDate();
         updateViews();
@@ -133,13 +115,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         startDateTime = startDateTime.withHour(hourOfDay);
         startDateTime = startDateTime.withMinute(minute);
         startTime = startDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
-
-        /*
-        calendarStart.set(Calendar.HOUR_OF_DAY, hourOfDay);
-        calendarStart.set(Calendar.MINUTE, minute);
-        startTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(calendarStart.getTime());
-        startDateMilliseconds = calendarStart.getTimeInMillis();
-        */
 
         saveStartDate();
         updateViews();
@@ -171,6 +146,21 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         int min = sharedPref.getInt(START_MIN, 0);
 
         startDateTime = LocalDateTime.of(year, month, day, hour, min, 0);
+    }
+
+    public void clearStartDate() {
+        SharedPreferences sharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.remove(START_DATE);
+        editor.remove(START_TIME);
+        editor.remove(START_YEAR);
+        editor.remove(START_MONTH);
+        editor.remove(START_DAY);
+        editor.remove(START_HOUR);
+        editor.remove(START_MIN);
+        editor.remove(SETTINGS_FULLDAYS);
+        editor.apply();
     }
 
     public void updateViews() {
