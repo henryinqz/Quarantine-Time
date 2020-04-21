@@ -16,8 +16,12 @@ This app only supports Android currently. To track how long you have been in qua
 3. Select "Set start date" and choose a starting date.
 4. You're all set. The date/time will automatically save and update to accurately track the elapsed time.
 
+### Note: 
+- Elapsed time is based on the current date and time.
+- Pressing the elapsed time will toggle the format to include years/months or only show days.
+- Start date can be fully reset in the top right options menu.
+
 ## Screenshots
 <p align="center">
   <img src=screenshots/home_empty.png width="239" height="496"> &nbsp; <img src=screenshots/date_picker.png width="239" height="496"> &nbsp; <img src=screenshots/time_picker.png width="239" height="496"> &nbsp; <img src=screenshots/home_format_yearmonth.png width="239" height="496"> &nbsp; <img src=screenshots/home_format_fulldays_alt.png width="239" height="496">
 </p>
-
