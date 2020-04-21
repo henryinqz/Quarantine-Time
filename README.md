@@ -11,10 +11,10 @@ https://github.com/henryinqz/Quarantine-Time
 This app only supports Android currently. To track how long you have been in quarantine for:
 
 1. Navigate to the ["releases"](https://github.com/henryinqz/Quarantine-Time/releases) tab of the Quarantine-Time repository.
-1. Download and install the .APK from the most recent release.
-2. Open the "Quarantine Time" app.
-3. Select "Set start date" and choose a starting date.
-4. You're all set. The date/time will automatically save and update to accurately track the elapsed time.
+2. Download and install the .APK from the most recent release.
+3. Open the "Quarantine Time" app.
+4. Select "Set start date" and choose a starting date.
+5. You're all set. The date/time will automatically save and update to accurately track the elapsed time.
 
 ### Note: 
 - Elapsed time is based on the current date and time.
